@@ -29,6 +29,7 @@ var (
 )
 
 // Date is a calendar date without location or clock-time information.
+// Valid years range from 0 to 9999; the zero value is not a valid date.
 type Date struct {
 	Year  int
 	Month stdtime.Month
@@ -92,6 +93,7 @@ func (d Date) Before(other Date) bool { return d.Compare(other) < 0 }
 func (d Date) After(other Date) bool { return d.Compare(other) > 0 }
 
 // AddDays returns d shifted by n calendar days. Invalid dates are returned unchanged.
+// Results outside years 0 through 9999 are invalid; check IsValid before use.
 func (d Date) AddDays(n int) Date {
 	if !d.IsValid() {
 		return d
@@ -101,6 +103,8 @@ func (d Date) AddDays(n int) Date {
 
 // AddMonths returns d shifted by n calendar months. If the target month has
 // fewer days, the result is clamped to that month's last day.
+// Invalid inputs are returned unchanged. Results outside years 0 through 9999
+// are invalid; check IsValid before use.
 func (d Date) AddMonths(n int) Date {
 	if !d.IsValid() {
 		return d
@@ -122,6 +126,8 @@ func (d Date) Weekday() stdtime.Weekday {
 }
 
 // In returns midnight on d in loc. It panics when d or loc is invalid.
+// Missing or repeated midnights follow time.Date, which may return a different
+// civil date and does not guarantee which offset is chosen at a transition.
 func (d Date) In(loc *stdtime.Location) stdtime.Time {
 	if !d.IsValid() {
 		panic(ErrInvalidDate)
@@ -413,6 +419,7 @@ func (dt DateTime) Before(other DateTime) bool { return dt.Compare(other) < 0 }
 func (dt DateTime) After(other DateTime) bool { return dt.Compare(other) > 0 }
 
 // AddDays returns dt shifted by n calendar days. Invalid values are returned unchanged.
+// Results outside years 0 through 9999 are invalid; check IsValid before use.
 func (dt DateTime) AddDays(n int) DateTime {
 	if !dt.IsValid() {
 		return dt
@@ -421,6 +428,8 @@ func (dt DateTime) AddDays(n int) DateTime {
 }
 
 // AddMonths returns dt shifted by n calendar months while preserving its time.
+// Invalid inputs are returned unchanged. Results outside years 0 through 9999
+// are invalid; check IsValid before use.
 func (dt DateTime) AddMonths(n int) DateTime {
 	if !dt.IsValid() {
 		return dt
@@ -430,6 +439,8 @@ func (dt DateTime) AddMonths(n int) DateTime {
 
 // Add returns dt shifted by d. The arithmetic uses fixed 24-hour civil days;
 // no timezone or daylight-saving rule is involved.
+// Invalid inputs are returned unchanged. Results outside years 0 through 9999
+// are invalid; check IsValid before use.
 func (dt DateTime) Add(d stdtime.Duration) DateTime {
 	if !dt.IsValid() {
 		return dt
@@ -452,6 +463,10 @@ func (dt DateTime) Sub(other DateTime) stdtime.Duration {
 
 // In converts dt to a time in loc. The conversion is explicit because dt has
 // no timezone of its own; DST rules are therefore applied by time.Date.
+// Missing or repeated local times follow time.Date, which may change the civil
+// fields and does not guarantee which offset is chosen at a transition.
+// A field-preserving round trip does not prove that the local time is unique.
+// In panics if dt is invalid or loc is nil.
 func (dt DateTime) In(loc *stdtime.Location) stdtime.Time {
 	if !dt.IsValid() {
 		panic(ErrInvalidDateTime)
