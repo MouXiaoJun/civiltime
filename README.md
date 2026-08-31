@@ -60,3 +60,21 @@ if err := row.Scan(sqladapter.DateTime(&when)); err != nil {
 - 参考 `set`：优先标准库，值类型 API 保持小而直接。
 - 参考 `dict_trans`：把数据库读写放在 `Scan` / `Value` 边界，不把具体驱动带进核心包。
 - 参考 `distsync`：保留明确的错误哨兵，调用者可以用 `errors.Is` 判断失败类别。
+
+## 维护与验证
+
+最低 Go 版本为 1.23。维护范围是现有民用日期、时间、空值与 SQL 适配契约，
+不新增节假日、农历、调度或具体数据库驱动。
+CI 在 Ubuntu 上使用 Go 1.23.0 和当前 stable，执行格式、构建、vet、全量测试及 race：
+
+```sh
+export GOWORK=off
+gofmt -l .
+go build ./...
+go vet ./...
+go test -count=1 ./...
+go test -race -count=1 ./...
+```
+
+时区转换测试实际读取纽约和 Apia 的时区数据，加载失败会令测试失败，不会跳过。
+SQL 测试验证 Scanner、Valuer 和 Codec 边界，不声称覆盖所有真实数据库驱动。
